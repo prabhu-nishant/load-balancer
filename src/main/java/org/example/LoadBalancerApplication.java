@@ -3,6 +3,7 @@ package org.example;
 import org.example.loadbalancers.LoadBalancer;
 import org.example.loadbalancers.RoundRobinLoadBalancer;
 import org.example.service.ClientHandlerService;
+import org.example.service.ThreadPoolService;
 
 import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
@@ -29,6 +30,7 @@ public class LoadBalancerApplication {
             backendServersAddressList.add(new InetSocketAddress(parts[0], Integer.parseInt(parts[1])));
         }
         LoadBalancer loadBalancer = new RoundRobinLoadBalancer(backendServersAddressList);
-        new ClientHandlerService(listenPort, healthCheckMillis, loadBalancer).start();
+        ThreadPoolService threadPoolService = new ThreadPoolService(30);
+        new ClientHandlerService(listenPort, healthCheckMillis, loadBalancer, threadPoolService).start();
     }
 }

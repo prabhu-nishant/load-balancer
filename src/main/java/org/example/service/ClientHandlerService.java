@@ -14,11 +14,14 @@ public class ClientHandlerService {
     private final int listenPort;
     private final long healthIntervalMs;
     private final LoadBalancer loadBalancer;
+    private final ThreadPoolService threadPoolService;
 
-    public ClientHandlerService(int listenPort, long healthIntervalMs, LoadBalancer loadBalancer) {
+    public ClientHandlerService(int listenPort, long healthIntervalMs, LoadBalancer loadBalancer,
+                                ThreadPoolService threadPoolService) {
         this.listenPort = listenPort;
         this.healthIntervalMs = healthIntervalMs;
         this.loadBalancer = loadBalancer;
+        this.threadPoolService = threadPoolService;
     }
 
     public void start() {
@@ -30,7 +33,7 @@ public class ClientHandlerService {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept(); // accept new client
-                new Thread(() -> handleClient(clientSocket)).start(); // each client gets its own thread
+                threadPoolService.submit(() -> handleClient(clientSocket));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -54,10 +57,8 @@ public class ClientHandlerService {
             System.out.println("Client " + clientSocket.getRemoteSocketAddress()
                     + " connected to Backend " + backendServer.getAddress());
 
-            Thread clientToBackendThread = new Thread(new RequestForwarder(clientSocket, backendSocket), "ClientToBackend");
-            Thread backendToClientThread = new Thread(new RequestForwarder(backendSocket, clientSocket), "BackendToClient");
-            clientToBackendThread.start();
-            backendToClientThread.start();
+            threadPoolService.submit(new Thread(new RequestForwarder(clientSocket, backendSocket), "ClientToBackend"));
+            threadPoolService.submit(new Thread(new RequestForwarder(backendSocket, clientSocket), "BackendToClient"));
 
         } catch (IOException e) {
             System.out.println("Failed to connect to backend " + backendServer.getAddress() + ": " + e.getMessage());
