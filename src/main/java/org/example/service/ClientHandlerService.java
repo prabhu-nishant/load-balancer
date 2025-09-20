@@ -23,7 +23,7 @@ public class ClientHandlerService {
 
     public void start() {
         List<BackendServer> masterBackendServerList = new ArrayList<>(loadBalancer.getBackendServers());
-        new Thread(new ServerHealthChecker(masterBackendServerList, loadBalancer, healthIntervalMs), "HealthChecker").start();
+        new Thread(new ServerPoolManager(masterBackendServerList, loadBalancer, healthIntervalMs), "ServerPoolManager").start();
 
         try (ServerSocket serverSocket = new ServerSocket(listenPort)) {
             System.out.println("Load balancer listening on port " + listenPort);
