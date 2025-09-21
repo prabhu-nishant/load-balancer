@@ -51,7 +51,7 @@ public class LeastConnectionsLoadBalancer implements LoadBalancer {
     public synchronized BackendServer getNextAvailableBackendServer(SocketAddress clientSocketAddress) {
         lock.writeLock().lock();
         if(leastConnectionServerPriorityQueue.isEmpty()){
-            return null;
+            throw new RuntimeException("No backend server available as this time");
         }
         var server = leastConnectionServerPriorityQueue.poll();
         server.incrementLoad();

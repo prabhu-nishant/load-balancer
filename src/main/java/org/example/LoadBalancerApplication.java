@@ -30,7 +30,7 @@ public class LoadBalancerApplication {
             backendServersAddressList.add(new InetSocketAddress(parts[0], Integer.parseInt(parts[1])));
         }
         LoadBalancer loadBalancer = new RoundRobinLoadBalancer(backendServersAddressList);
-        ThreadPoolService threadPoolService = new ThreadPoolService(30);
+        ThreadPoolService threadPoolService = new ThreadPoolService(3);
         new ClientHandlerService(listenPort, healthCheckMillis, loadBalancer, threadPoolService).start();
     }
 }

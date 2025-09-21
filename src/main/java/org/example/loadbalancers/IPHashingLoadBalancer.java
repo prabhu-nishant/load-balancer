@@ -34,7 +34,7 @@ public class IPHashingLoadBalancer implements LoadBalancer {
     @Override
     public synchronized BackendServer getNextAvailableBackendServer(SocketAddress clientSocketAddress) {
         if (ring.isEmpty()) {
-            return null;
+            throw new RuntimeException("No backend server available as this time");
         }
         long hash = generateHash(clientSocketAddress.toString());
         if (!ring.containsKey(hash)) {

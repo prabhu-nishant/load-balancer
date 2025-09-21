@@ -29,6 +29,9 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
 
     @Override
     public synchronized BackendServer getNextAvailableBackendServer(SocketAddress clientSocketAddress) {
+        if(backendServerList.isEmpty()){
+            throw new RuntimeException("No backend server available as this time");
+        }
         int index = counter.getAndIncrement() % backendServerList.size();
         return backendServerList.get(index);
     }
