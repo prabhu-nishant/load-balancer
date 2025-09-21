@@ -40,7 +40,7 @@ public class ClientHandlerService {
         }
     }
 
-    private void handleClient(Socket clientSocket) {
+    public void handleClient(Socket clientSocket) {
         BackendServer backendServer = loadBalancer.getNextAvailableBackendServer(clientSocket.getRemoteSocketAddress());
         if (backendServer == null) {
             try {

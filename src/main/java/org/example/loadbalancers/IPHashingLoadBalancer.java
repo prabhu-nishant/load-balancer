@@ -21,13 +21,13 @@ public class IPHashingLoadBalancer implements LoadBalancer {
 
     @Override
     public void addServer(InetSocketAddress serverAddress) {
-        long hash = generateHash(serverAddress.getAddress().toString());
+        long hash = generateHash(serverAddress.getAddress().toString() + serverAddress.getPort());
         ring.put(hash, new BackendServer(serverAddress));
     }
 
     @Override
     public void removeServer(InetSocketAddress serverAddress) {
-        long hash = generateHash(serverAddress.getAddress().toString());
+        long hash = generateHash(serverAddress.getAddress().toString() + serverAddress.getPort());
         ring.remove(hash);
     }
 

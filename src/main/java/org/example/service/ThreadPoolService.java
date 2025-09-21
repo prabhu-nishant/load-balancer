@@ -6,21 +6,33 @@ import java.util.Queue;
 public class ThreadPoolService {
 
     private final Queue<Runnable> queue = new LinkedList<>();
+    private final TaskExecutor[] executors;
 
     public ThreadPoolService(int noOfThreads) {
-        for (int i =0 ;i<noOfThreads ;i++) {
-            TaskExecutor taskExecutor = new TaskExecutor(queue);
-            new Thread(taskExecutor).start();
+        executors = new TaskExecutor[noOfThreads];
+        for (int i = 0; i < noOfThreads; i++) {
+            executors[i] = new TaskExecutor(queue);
+            new Thread(executors[i], "ThreadPoolWorker-" + i).start();
         }
     }
 
-    public void submit(Runnable runnable){
-        queue.add(runnable);
+    public void submit(Runnable runnable) {
+        synchronized (queue) {
+            queue.add(runnable);
+            queue.notifyAll(); // wake up worker threads
+        }
     }
 
-    private class TaskExecutor implements Runnable {
+    public void shutdown() {
+        for (TaskExecutor executor : executors) {
+            executor.stop();
+        }
+    }
+
+    private static class TaskExecutor implements Runnable {
 
         private final Queue<Runnable> queue;
+        private volatile boolean running = true;
 
         public TaskExecutor(Queue<Runnable> queue) {
             this.queue = queue;
@@ -28,11 +40,27 @@ public class ThreadPoolService {
 
         @Override
         public void run() {
-            while (true){
-                Runnable runnable = queue.poll();
-                if(runnable != null){
-                    runnable.run();
+            while (running) {
+                Runnable runnable;
+                synchronized (queue) {
+                    runnable = queue.poll();
+                    if (runnable == null) {
+                        try {
+                            queue.wait();
+                        } catch (InterruptedException ignored) {}
+                        continue;
+                    }
                 }
+                try {
+                    runnable.run();
+                } catch (Exception ignored) {}
+            }
+        }
+
+        public void stop() {
+            running = false;
+            synchronized (queue) {
+                queue.notifyAll();
             }
         }
     }
